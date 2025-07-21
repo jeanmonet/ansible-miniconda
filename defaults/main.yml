@@ -16,6 +16,8 @@ miniconda_parent_dir: /usr/local
 miniconda_link_subdir: anaconda
 
 miniconda_pkg_update: true
+# conda channels require ToS acceptance. Accept existing channels' ToS before package update
+miniconda_accept_channel_tos: true
 
 # become root?
 miniconda_escalate: true
