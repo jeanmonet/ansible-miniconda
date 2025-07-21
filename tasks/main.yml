@@ -96,6 +96,30 @@
         path: '{{ miniconda_tmp_dir }}/{{ miniconda_installer_sh }}'
         state: absent
 
+# Dynamically accept conda ToS for all configured channels if enabled
+- name: Get list of conda channels
+  become: '{{ miniconda_escalate }}'
+  become_user: root
+  ansible.builtin.shell: |
+    {{ miniconda_conda_bin }} config --json --show channels
+  register: conda_channels_raw
+  changed_when: false
+  when: miniconda_accept_channel_tos | default(True)
+
+- name: Parse conda channels
+  set_fact:
+    conda_channels: "{{ (conda_channels_raw.stdout | from_json).channels }}"
+  when: miniconda_accept_channel_tos | default(True)
+
+- name: Accept conda Terms of Service for all configured channels
+  become: '{{ miniconda_escalate }}'
+  become_user: root
+  loop: "{{ conda_channels | default([]) }}"
+  ansible.builtin.shell: |
+    {{ miniconda_conda_bin }} tos accept --override-channels --channel {{ item }}
+  changed_when: false
+  when: miniconda_accept_channel_tos | default(True)
+
 - name: Update conda pkgs...
   become: '{{ miniconda_escalate }}'
   become_user: root
